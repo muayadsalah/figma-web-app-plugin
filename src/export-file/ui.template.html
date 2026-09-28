@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+  <head><meta charset="utf-8" /><style>
+    body { font: 13px/1.5 ui-sans-serif, system-ui, sans-serif; color: #111; margin: 0; padding: 18px; }
+    h1 { font-size: 14px; margin: 0 0 10px; }
+    p { margin: 0 0 10px; color: #444; }
+    code { background: #f3f3f3; border-radius: 4px; padding: 1px 4px; }
+    .row { display: flex; gap: 8px; margin-top: 12px; }
+    button { flex: 1; border: 0; border-radius: 8px; padding: 10px 12px; font: inherit; font-weight: 600; cursor: pointer; background: #111; color: #fff; }
+    button.secondary { background: #eee; color: #111; }
+    button:disabled { opacity: .5; cursor: default; }
+    ul { margin: 0 0 10px; padding-left: 18px; color: #444; }
+  </style></head>
+  <body>
+    <h1>Export file to JSON</h1>
+    <p id="status">Reading the board frames…</p>
+    <ul id="list"></ul>
+    <p id="hint" hidden>Save this as <code>{{exportFilePath}}</code> in the repository,
+       then run <code>{{diffCommand}}</code>.</p>
+    <div class="row">
+      <button id="download" disabled>Download JSON</button>
+      <button id="copy" class="secondary" disabled>Copy</button>
+    </div>
+    <div class="row">
+      <button id="close" class="secondary" disabled>Close</button>
+    </div>
+
+    <script>
+      let payload = null;
+
+      function describe() {
+        const screens = payload.screens || [];
+        document.getElementById('status').textContent =
+          screens.length + ' frame' + (screens.length === 1 ? '' : 's') + ' on "' + payload.page + '"';
+        document.getElementById('list').innerHTML = screens
+          .map((screen) => '<li>' + screen.name + ' — ' + screen.width + '×' + screen.height + '</li>')
+          .join('');
+        for (const id of ['download', 'copy']) document.getElementById(id).disabled = !screens.length;
+        document.getElementById('close').disabled = false;
+        document.getElementById('hint').hidden = !screens.length;
+      }
+
+      function text() {
+        return JSON.stringify(payload, null, 2);
+      }
+
+      function save() {
+        const blob = new Blob([text()], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = '{{exportFilename}}';
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+      }
+
+      async function copy() {
+        await navigator.clipboard.writeText(text());
+        document.getElementById('status').textContent = 'Copied ' + text().length + ' characters';
+      }
+
+      onmessage = (event) => {
+        const message = event.data.pluginMessage;
+        if (message && message.type === 'export') {
+          payload = message.payload;
+          describe();
+        }
+      };
+      document.getElementById('download').onclick = save;
+      document.getElementById('copy').onclick = copy;
+      document.getElementById('close').onclick = () => parent.postMessage({ pluginMessage: { type: 'close' } }, '*');
+
+      // Tell the plugin the window is listening: it only sends the payload after this, because a
+      // message posted before this listener exists would be dropped.
+      parent.postMessage({ pluginMessage: { type: 'ready' } }, '*');
+    </script>
+  </body>
+</html>

@@ -1,0 +1,34 @@
+{
+  "name": "figma-web-app-plugin",
+  "version": "0.1.0",
+  "description": "A small, dependency-free toolkit for generating and verifying Figma plugins without opening Figma: a spec-driven canvas renderer, a strict fake plugin host, manifest validation, a sandbox harness, and a reusable 'export file to JSON' plugin template.",
+  "license": "MIT",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./fake-figma": "./src/fake-figma.js",
+    "./manifest-rules": "./src/manifest-rules.js",
+    "./harness": "./src/harness.js",
+    "./renderer": "./src/renderer/index.js",
+    "./export-file": "./src/export-file/index.js"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "figma",
+    "plugin",
+    "figma-plugin",
+    "design-tokens",
+    "testing",
+    "harness"
+  ]
+}
